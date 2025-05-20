@@ -1,0 +1,47 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import CategoryBadge from '@/components/CategoryBadge.astro';
+import { getCollection } from 'astro:content';
+
+// Get all categories from blog posts
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+
+// Extract unique categories and count posts in each category
+const categories = posts.reduce((acc, post) => {
+  post.data.categories.forEach(category => {
+    if (!acc[category]) {
+      acc[category] = 0;
+    }
+    acc[category]++;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+// Sort categories alphabetically
+const sortedCategories = Object.entries(categories).sort((a, b) => a[0].localeCompare(b[0]));
+---
+
+<Layout title="Categories | MyBlog" description="Browse posts by category">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-8">Browse by Category</h1>
+    
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {sortedCategories.map(([category, count]) => (
+        <a href={`/categories/${category.toLowerCase()}`} class="block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg p-6 transition-shadow duration-300">
+          <div class="mb-3">
+            <CategoryBadge category={category} />
+          </div>
+          <h2 class="text-xl font-semibold mb-2">{category}</h2>
+          <p class="text-gray-600 dark:text-gray-400">{count} {count === 1 ? 'post' : 'posts'}</p>
+        </a>
+      ))}
+      
+      {sortedCategories.length === 0 && (
+        <div class="col-span-full text-center py-12">
+          <h2 class="text-xl font-medium mb-2">No categories found</h2>
+          <p class="text-gray-600 dark:text-gray-400">Check back later for categorized content!</p>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,67 @@
+---
+import { formatDate } from '@/utils/date';
+import CategoryBadge from './CategoryBadge.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const { slug, data } = post;
+const { title, description, pubDate, heroImage, categories, featured: isFeatured } = data;
+
+const formattedDate = formatDate(pubDate);
+---
+
+<article class={`bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 ${featured ? 'md:col-span-2' : ''}`}>
+  {heroImage && (
+    <a href={`/blog/${slug}`} class="block overflow-hidden">
+      <img 
+        src={heroImage} 
+        alt={`Cover image for ${title}`}
+        class={`w-full object-cover transition-transform duration-300 hover:scale-105 ${featured ? 'h-64' : 'h-48'}`}
+        transition:name={`hero-${slug}`}
+      />
+    </a>
+  )}
+  
+  <div class="p-6">
+    {(isFeatured || featured) && (
+      <span class="inline-block px-3 py-1 text-xs font-medium bg-accent-100 text-accent-800 dark:bg-accent-900 dark:text-accent-200 rounded-full mb-3">
+        Featured
+      </span>
+    )}
+    
+    {categories.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-3">
+        {categories.map((category) => (
+          <CategoryBadge category={category} small />
+        ))}
+      </div>
+    )}
+    
+    <h2 class={`font-bold text-gray-900 dark:text-white mb-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors ${featured ? 'text-2xl' : 'text-xl'}`}>
+      <a href={`/blog/${slug}`}>{title}</a>
+    </h2>
+    
+    <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{description}</p>
+    
+    <div class="flex items-center justify-between">
+      <span class="text-sm text-gray-500 dark:text-gray-400">
+        {formattedDate}
+      </span>
+      
+      <a 
+        href={`/blog/${slug}`}
+        class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors text-sm font-medium inline-flex items-center"
+      >
+        Read more
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</article>
