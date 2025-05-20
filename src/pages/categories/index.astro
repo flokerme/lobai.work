@@ -6,42 +6,228 @@ import { getCollection } from 'astro:content';
 // Get all categories from blog posts
 const posts = await getCollection('blog', ({ data }) => !data.draft);
 
-// Extract unique categories and count posts in each category
-const categories = posts.reduce((acc, post) => {
+// Extract unique categories, count posts and get the latest post in each category
+const categoryData = {} as Record<string, { count: number; latestPost?: { title: string; slug: string; date: number } }>;
+posts.forEach(post => {
   post.data.categories.forEach(category => {
-    if (!acc[category]) {
-      acc[category] = 0;
+    if (!categoryData[category]) {
+      categoryData[category] = { count: 0 };
     }
-    acc[category]++;
+    // Increment count
+    categoryData[category].count++;
+    
+    // Check if this is the latest post in this category
+    if (!categoryData[category].latestPost || 
+        post.data.pubDate.valueOf() > (categoryData[category].latestPost?.date || 0)) {
+      categoryData[category].latestPost = {
+        title: post.data.title,
+        slug: post.slug,
+        date: post.data.pubDate.valueOf()
+      };
+    }
   });
+});
+
+// Create simple count map for backward compatibility
+const categories = Object.entries(categoryData).reduce((acc, [category, data]) => {
+  acc[category] = data.count;
   return acc;
 }, {} as Record<string, number>);
 
-// Sort categories alphabetically
-const sortedCategories = Object.entries(categories).sort((a, b) => a[0].localeCompare(b[0]));
+// Get the maximum post count for any category (for progress bar calculation)
+const maxPostCount = Math.max(...Object.values(categories) as number[], 1);
+
+// Calculate threshold for "hot" categories (categories with post count >= 50% of max are considered hot)
+const hotThreshold = Math.max(Math.ceil(maxPostCount * 0.5), 2); // At least 2 posts to be considered hot
+
+// Group categories by first letter for better organization
+const groupedCategories = Object.entries(categories).reduce<Record<string, [string, number][]>>((acc, [category, count]) => {
+  const firstLetter = category.charAt(0).toUpperCase();
+  if (!acc[firstLetter]) {
+    acc[firstLetter] = [];
+  }
+  acc[firstLetter].push([category, count]);
+  return acc;
+}, {} as Record<string, [string, number][]>);
+
+// Sort groups alphabetically
+const sortedGroups = Object.entries(groupedCategories).sort((a, b) => 
+  a[0].localeCompare(b[0])
+);
+
+// Within each group, sort categories by post count (descending) then alphabetically
+sortedGroups.forEach(([_, categories]) => {
+  categories.sort((a, b) => {
+    // First by post count (descending)
+    if (b[1] !== a[1]) return b[1] - a[1];
+    // Then alphabetically
+    return a[0].localeCompare(b[0]);
+  });
+});
+
+// Function to get random gradient colors for group headers
+function getRandomGradient(letter: string): string {
+  const gradients = [
+    'from-blue-500 to-purple-600',
+    'from-green-500 to-teal-500',
+    'from-red-500 to-orange-500',
+    'from-pink-500 to-rose-500',
+    'from-indigo-500 to-blue-600',
+    'from-purple-500 to-indigo-600',
+    'from-yellow-500 to-amber-600',
+    'from-cyan-500 to-blue-500',
+    'from-fuchsia-500 to-purple-600',
+    'from-emerald-500 to-green-600'
+  ];
+  
+  // Generate a hash from the letter to get a deterministic but 'random' color
+  let hash = 0;
+  for (let i = 0; i < letter.length; i++) {
+    hash = letter.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Use the hash to select a gradient
+  const index = Math.abs(hash) % gradients.length;
+  return gradients[index];
+}
+
+// Function to get a deterministic image for each category
+function getCategoryImage(category: string): string {
+  // Array of category-themed images
+  const imageMap: Record<string, string> = {
+    // General categories
+    'general': '/images/categories/general.jpg',
+    '通用': '/images/categories/general.jpg',
+    'misc': '/images/categories/misc.jpg',
+    '杂项': '/images/categories/misc.jpg',
+    
+    // Tech categories
+    'technology': '/images/categories/technology.jpg',
+    '技术': '/images/categories/technology.jpg',
+    'programming': '/images/categories/programming.jpg',
+    '编程': '/images/categories/programming.jpg',
+    'web': '/images/categories/web.jpg',
+    '网页': '/images/categories/web.jpg',
+    'code': '/images/categories/code.jpg',
+    '代码': '/images/categories/code.jpg',
+    
+    // Creative categories
+    'design': '/images/categories/design.jpg',
+    '设计': '/images/categories/design.jpg',
+    'art': '/images/categories/art.jpg',
+    '艺术': '/images/categories/art.jpg',
+    'music': '/images/categories/music.jpg',
+    '音乐': '/images/categories/music.jpg',
+    
+    // Lifestyle categories
+    'travel': '/images/categories/travel.jpg',
+    '旅行': '/images/categories/travel.jpg',
+    'food': '/images/categories/food.jpg',
+    '美食': '/images/categories/food.jpg',
+    'health': '/images/categories/health.jpg',
+    '健康': '/images/categories/health.jpg',
+  };
+  
+  // Check if we have a direct mapping for this category
+  const lowerCategory = category.toLowerCase();
+  if (imageMap[lowerCategory]) {
+    return imageMap[lowerCategory];
+  }
+  
+  // If no direct mapping, use default category image
+  return '/images/categories/default.jpg';
+}
 ---
 
-<Layout title="Categories | MyBlog" description="Browse posts by category">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl sm:text-4xl font-bold mb-8">Browse by Category</h1>
+<Layout title="分类 | 我的博客" description="按分类浏览文章">
+  <div class="max-w-4xl mx-auto px-4">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-8 text-center">按分类浏览</h1>
     
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {sortedCategories.map(([category, count]) => (
-        <a href={`/categories/${category.toLowerCase()}`} class="block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg p-6 transition-shadow duration-300">
-          <div class="mb-3">
-            <CategoryBadge category={category} />
+    {Object.entries(categories).length > 0 ? (
+      <div class="w-full">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+        {sortedGroups.map(([letter, categories]) => (
+          <div class="category-group w-full">
+            <div class={`sticky top-0 z-10 bg-gradient-to-r ${getRandomGradient(letter)} text-white py-2 px-4 rounded-t-lg shadow-md`}>
+              <h2 class="text-2xl font-bold">{letter}</h2>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-b-lg shadow-lg p-6 w-full">
+              <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 w-full">
+                {categories.map(([category, count]) => {
+                  // Calculate percentage for progress bar width
+                  const percentage = Math.round((count / maxPostCount) * 100);
+                  return (
+                    <a 
+                      href={`/categories/${category.toLowerCase()}`} 
+                      class="group relative block border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-300 hover:border-transparent hover:scale-105 overflow-hidden w-full h-full flex flex-col"
+                    >
+                      {count >= hotThreshold && (
+                        <div class="absolute top-0 right-0">
+                          <div class="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold py-1 px-2 rounded-bl-lg rounded-tr-lg shadow-md transform transition-transform group-hover:scale-110">
+                            热门
+                          </div>
+                        </div>
+                      )}
+                      <div class="relative overflow-hidden h-32 bg-gray-200 dark:bg-gray-700 w-full">
+                        <img 
+                          src={getCategoryImage(category)} 
+                          alt={`${category} category`}
+                          class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                          onerror={`this.onerror=null; this.src='/images/categories/fallback.jpg'`}
+                        />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-3 w-full">
+                          <span class="text-white font-semibold text-lg tracking-wide">{category}</span>
+                        </div>
+                      </div>
+                      <div class="p-4 flex-1 flex flex-col">
+                        <div class="flex justify-center items-center mb-4">
+                          <div class="flex items-center px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-full shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span class="font-medium text-gray-700 dark:text-gray-300">{count}</span>
+                            <span class="ml-1 text-sm text-gray-500 dark:text-gray-400">篇文章</span>
+                          </div>
+                        </div>
+                        
+                        {categoryData[category]?.latestPost && (
+                          <div class="mt-3 border-t border-gray-100 dark:border-gray-700 pt-3">
+                            <div class="flex items-center">
+                              <div class="flex-shrink-0 bg-gradient-to-r from-blue-500 to-purple-600 w-1 h-12 rounded-full mr-2"></div>
+                              <div class="flex-1 overflow-hidden">
+                                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-1 space-x-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>最新文章</span>
+                                </div>
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-300 truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+                                  {categoryData[category].latestPost.title}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <h2 class="text-xl font-semibold mb-2">{category}</h2>
-          <p class="text-gray-600 dark:text-gray-400">{count} {count === 1 ? 'post' : 'posts'}</p>
-        </a>
-      ))}
-      
-      {sortedCategories.length === 0 && (
-        <div class="col-span-full text-center py-12">
-          <h2 class="text-xl font-medium mb-2">No categories found</h2>
-          <p class="text-gray-600 dark:text-gray-400">Check back later for categorized content!</p>
+        ))}
         </div>
-      )}
-    </div>
+      </div>
+    ) : (
+      <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h2 class="text-xl font-medium mb-2">未找到分类</h2>
+        <p class="text-gray-600 dark:text-gray-400">请稍后再来查看分类内容！</p>
+      </div>
+    )}
   </div>
 </Layout>

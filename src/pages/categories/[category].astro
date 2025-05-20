@@ -30,10 +30,10 @@ export async function getStaticPaths() {
 const { category, posts } = Astro.props;
 ---
 
-<Layout title={`${category} | MyBlog`} description={`Browse all posts in the ${category} category`}>
+<Layout title={`${category} | 我的博客`} description={`浏览${category}分类中的所有文章`}>
   <div class="max-w-4xl mx-auto">
     <h1 class="text-3xl sm:text-4xl font-bold mb-2">{category}</h1>
-    <p class="text-gray-600 dark:text-gray-400 mb-8">Browsing {posts.length} {posts.length === 1 ? 'post' : 'posts'} in this category</p>
+    <p class="text-gray-600 dark:text-gray-400 mb-8">浏览当前分类中的 {posts.length} 篇文章</p>
     
     <div class="grid gap-8">
       {posts.map(post => (
@@ -42,8 +42,8 @@ const { category, posts } = Astro.props;
       
       {posts.length === 0 && (
         <div class="text-center py-12">
-          <h2 class="text-xl font-medium mb-2">No posts in this category</h2>
-          <p class="text-gray-600 dark:text-gray-400">Check back later for new content!</p>
+          <h2 class="text-xl font-medium mb-2">该分类下暂时没有文章</h2>
+          <p class="text-gray-600 dark:text-gray-400">请稍后再来查看新内容！</p>
         </div>
       )}
     </div>
