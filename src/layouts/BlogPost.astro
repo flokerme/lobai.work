@@ -93,47 +93,84 @@ const modifiedDate = updatedDate ? formatDate(updatedDate) : null;
       <ShareButtons title={title} url={Astro.url.href} />
     </div>
 
- <div class="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6">
- <h2 class="text-2xl font-bold mb-6 text-center">Support My Work</h2>
- <p class="text-center text-gray-700 dark:text-gray-300 mb-8">If you find this article helpful, you can support my work by donating.</p>
- <div class="flex flex-wrap justify-center gap-8">
- <div class="flex flex-col items-center">
- <img src="/images/donate/alipay.png" alt="Alipay" class="w-24 h-24 object-contain mb-2">
- <p class="text-sm text-gray-700 dark:text-gray-300">Alipay</p>
- </div>
- <div class="flex flex-col items-center">
- <img src="/images/donate/wechatpay.png" alt="WeChat Pay" class="w-24 h-24 object-contain mb-2">
- <p class="text-sm text-gray-700 dark:text-gray-300">WeChat Pay</p>
- </div>
- <div class="flex flex-col items-center">
- <!-- Consider using an icon or a placeholder image if you don't have a PayPal QR -->
- <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-blue-600 dark:text-blue-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h10m-9 6h8a2 2 0 002-2v-8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z" />
- </svg>
- <p class="text-sm text-gray-700 dark:text-gray-300">
- <a href="YOUR_PAYPAL_ME_LINK" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">PayPal</a>
- </p>
- </div>
- <div class="flex flex-col items-center">
- <!-- Consider using an icon for Bitcoin -->
- <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-yellow-500 dark:text-yellow-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 10H17a.75.75 0 01-.75-.75V6.5a.75.75 0 01.75-.75h.25c.414 0 .75.336.75.75V10zM9.75 14H9a.75.75 0 01-.75-.75V6.5a.75.75 0 01.75-.75h.75A.75.75 0 0111.25 6.5v7.5z" />
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- <p class="text-sm text-gray-700 dark:text-gray-300">
- <span class="break-all">YOUR_BITCOIN_ADDRESS</span>
- </p>
- </div>
- </div>
- <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
- You can scan the QR codes for Alipay and WeChat Pay. For PayPal and Bitcoin, please use the provided link/address. Thank you for your support!
- </p>
- </div>
+<div class="mt-12 border-t border-gray-200 dark:border-gray-800 pt-6">
+  <button 
+    id="donate-toggle" 
+    class="w-full flex items-center justify-between text-lg font-semibold px-6 py-3 bg-white dark:bg-gray-900 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md transition-all duration-200"
+    aria-expanded="false"
+    aria-controls="donate-content"
+  >
+    <span>支持我的创作</span>
+    <svg id="donate-icon" class="w-5 h-5 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  
+  <div id="donate-content" class="overflow-hidden transition-all duration-300 max-h-0 mt-4">
+    <div class="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+      <p class="text-center text-gray-700 dark:text-gray-300 mb-6">如果这篇文章对你有帮助，可以通过以下方式支持我的创作</p>
+      <div class="flex flex-wrap justify-center gap-6">
+        <div class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[140px]">
+          <img src="/images/donate/alipay.png" alt="支付宝" class="w-20 h-20 object-contain mb-2">
+          <p class="text-sm text-gray-700 dark:text-gray-300">支付宝</p>
+        </div>
+        <div class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[140px]">
+          <img src="/images/donate/wechatpay.png" alt="微信支付" class="w-20 h-20 object-contain mb-2">
+          <p class="text-sm text-gray-700 dark:text-gray-300">微信支付</p>
+        </div>
+        <div class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[140px]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-blue-600 dark:text-blue-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h10m-9 6h8a2 2 0 002-2v-8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            <a href="YOUR_PAYPAL_ME_LINK" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">PayPal</a>
+          </p>
+        </div>
+        <div class="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[140px]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-yellow-500 dark:text-yellow-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 10H17a.75.75 0 01-.75-.75V6.5a.75.75 0 01.75-.75h.25c.414 0 .75.336.75.75V10zM9.75 14H9a.75.75 0 01-.75-.75V6.5a.75.75 0 01.75-.75h.75A.75.75 0 0111.25 6.5v7.5z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="break-all">YOUR_BITCOIN_ADDRESS</span>
+          </p>
+        </div>
+      </div>
+      <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+        支付宝/微信支付可扫描二维码，PayPal/Bitcoin请使用提供的链接/地址。感谢支持！
+      </p>
+    </div>
+  </div>
+</div>
 
- {/* Make sure to replace placeholder image sources and donation details with your actual information. */}
- {/* You will need to add the Alipay and WeChat Pay QR code images to your public/images/donate directory. */}
- {/* Replace YOUR_PAYPAL_ME_LINK with your PayPal.Me link. */}
- {/* Replace YOUR_BITCOIN_ADDRESS with your Bitcoin address. */}
+<script>
+  const toggleButton = document.getElementById('donate-toggle');
+  const donateContent = document.getElementById('donate-content');
+  const donateIcon = document.getElementById('donate-icon');
+
+  if (toggleButton && donateContent) {
+    toggleButton.addEventListener('click', () => {
+      const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
+      toggleButton.setAttribute('aria-expanded', !isExpanded);
+      donateContent.style.maxHeight = isExpanded ? '0' : `${donateContent.scrollHeight}px`;
+      donateIcon.classList.toggle('rotate-180');
+    });
+  }
+</script>
+
+<style>
+  /* 新增平滑过渡样式 */
+  #donate-content {
+    transition: max-height 0.3s ease-in-out, opacity 0.2s ease;
+    opacity: 0;
+  }
+  #donate-content[style*="max-height"] {
+    opacity: 1;
+  }
+  .rotate-180 {
+    transform: rotate(180deg);
+  }
+</style>
 
     <div class="mt-12">
       <h2 class="text-2xl font-bold mb-6">Comments</h2>
