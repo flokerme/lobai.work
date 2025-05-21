@@ -4,7 +4,8 @@
 <button
   id="theme-toggle"
   class="p-2 rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors duration-200"
-  aria-label="Toggle dark mode"
+  aria-label="切换主题"
+  onclick="window.toggleTheme()"
 >
   <!-- Sun icon (shown in dark mode) -->
   <svg
@@ -37,23 +38,66 @@
       d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
     />
   </svg>
+  
+  <!-- System theme icon (shown when system preference is used) -->
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="h-5 w-5 hidden"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    id="system-theme-icon"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+    />
+  </svg>
 </button>
 
 <script>
-  // Theme toggle functionality
-  const themeToggle = document.getElementById('theme-toggle');
+  // 更新主题图标状态
+  const updateThemeIcon = () => {
+    const theme = document.documentElement.getAttribute('data-theme');
+    const sunIcon = document.querySelector('#theme-toggle svg:first-child');
+    const moonIcon = document.querySelector('#theme-toggle svg:nth-child(2)');
+    const systemIcon = document.getElementById('system-theme-icon');
+    
+    // 隐藏所有图标
+    [sunIcon, moonIcon, systemIcon].forEach(icon => {
+      if (icon) icon.classList.add('hidden');
+    });
+    
+    // 显示当前主题对应的图标
+    if (theme === 'dark') {
+      moonIcon?.classList.remove('hidden');
+    } else if (theme === 'light') {
+      sunIcon?.classList.remove('hidden');
+    } else {
+      systemIcon?.classList.remove('hidden');
+    }
+  };
   
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.contains('dark');
-      
-      if (isDark) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+  // 监听主题变化
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme' || mutation.attributeName === 'class') {
+        updateThemeIcon();
       }
     });
+  });
+  
+  // 开始观察
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'class']
+  });
+  
+  // 初始化图标状态
+  document.addEventListener('DOMContentLoaded', updateThemeIcon);
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    updateThemeIcon();
   }
 </script>

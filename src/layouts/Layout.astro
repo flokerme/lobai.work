@@ -30,25 +30,47 @@ const { title, description = '个人博客分享网站', image = '/images/defaul
     <meta name="twitter:image" content={image} />
     <title>{title}</title>
     <ViewTransitions />
-    <script is:inline>
-      // Check for preferred theme
-      const theme = (() => {
-        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-          return localStorage.getItem('theme');
-        }
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          return 'dark';
-        }
-        return 'light';
-      })();
-            
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+    <script is:inline define:vars={{ isClient: typeof document !== 'undefined' }}>
+      // 检查系统主题偏好
+      const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       
-      window.localStorage.setItem('theme', theme);
+      // 初始化主题
+      const initTheme = () => {
+        // 从 localStorage 获取主题，如果没有则使用系统偏好
+        let theme = localStorage.getItem('theme') || getSystemTheme();
+        
+        // 应用主题
+        applyTheme(theme);
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+          }
+        });
+      };
+      
+      // 应用主题
+      const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      };
+      
+      // 切换主题
+      window.toggleTheme = (theme) => {
+        const newTheme = theme || (document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+      };
+      
+      // 初始化
+      if (typeof document !== 'undefined') {
+        initTheme();
+      }
     </script>
   </head>
   <body class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">

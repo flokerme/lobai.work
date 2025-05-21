@@ -156,7 +156,6 @@ function getCategoryImage(category: string): string {
               <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 w-full">
                 {categories.map(([category, count]) => {
                   // Calculate percentage for progress bar width
-                  const percentage = Math.round((count / maxPostCount) * 100);
                   return (
                     <a 
                       href={`/categories/${category.toLowerCase()}`} 
